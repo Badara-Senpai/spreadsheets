@@ -115,6 +115,7 @@ GEM
     marcel (1.0.4)
     matrix (0.4.2)
     method_source (1.0.0)
+    middleware (0.1.0)
     mini_mime (1.1.5)
     minitest (5.22.3)
     msgpack (1.7.2)
@@ -128,6 +129,14 @@ GEM
     net-smtp (0.4.0.1)
       net-protocol
     nio4r (2.7.0)
+    nobrainer (0.44.1)
+      activemodel (>= 4.1.0, < 8)
+      activesupport (>= 4.1.0, < 8)
+      middleware (~> 0.1.0)
+      rethinkdb (>= 2.3.0, < 2.5)
+      symbol_decoration (~> 1.1)
+    nobrainer_streams (0.2.0)
+      rethinkdb (~> 2.3)
     nokogiri (1.16.3-aarch64-linux)
       racc (~> 1.4)
     nokogiri (1.16.3-arm-linux)
@@ -183,6 +192,7 @@ GEM
     regexp_parser (2.9.0)
     reline (0.4.3)
       io-console (~> 0.5)
+    rethinkdb (2.4.0.0)
     rexml (3.2.6)
     rubyzip (2.3.2)
     selenium-webdriver (4.18.1)
@@ -206,6 +216,7 @@ GEM
     stimulus-rails (1.3.3)
       railties (>= 6.0.0)
     stringio (3.1.0)
+    symbol_decoration (1.1.0)
     thor (1.3.1)
     timeout (0.4.1)
     turbo-rails (2.0.5)
@@ -241,6 +252,8 @@ DEPENDENCIES
   debug
   importmap-rails
   jbuilder
+  nobrainer
+  nobrainer_streams
   puma (~> 5.0)
   rails (~> 7.0.8)
   selenium-webdriver
