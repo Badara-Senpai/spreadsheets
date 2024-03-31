@@ -11,5 +11,7 @@ consumer.subscriptions.create("ActiveUsersChannel", {
 
   received(data) {
     // Called when there's incoming data on the websocket for this channel
+    const event = new CustomEvent('user-update', { detail: data });
+    setTimeout(() => document.dispatchEvent(event), 200); // Ensures the Stimulus controller is ready
   }
 });
