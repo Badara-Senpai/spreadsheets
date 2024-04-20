@@ -1,5 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 import Handsontable from "handsontable"
+import consumer from "channels/consumer"
+
 
 export default class extends Controller {
     static targets = ["list"]
@@ -10,6 +12,21 @@ export default class extends Controller {
         this.setupHandsontable();
 
         this.activeUsers = {};
+
+        this.selectedCells = [];
+
+        this.subscription = consumer.subscriptions.create("ActiveUsersChannel", {
+            received: (data) => {
+                if (data.selected_cells) {
+                    this.renderSelectedCells(data);
+                }
+            }
+        });
+
+        this.current_user = {
+            id: 'unknown'
+        };
+
     }
 
     disconnect() {
@@ -26,13 +43,16 @@ export default class extends Controller {
             this.removeUser(data.old_val.id);
         } else if (data.new_val) {
             this.newUser(data.new_val);
+        } else if (data.current_user) {
+            this.setCurrentUser(data.current_user)
         }
     }
 
     newUser(user) {
-        console.log(user)
         this.activeUsers[user.id] = user;
+        this.numberUsers();
         this.renderActiveUsers();
+        this.renderSelectedCells();
     }
 
     removeUser(userId) {
@@ -40,12 +60,52 @@ export default class extends Controller {
         this.renderActiveUsers();
     }
 
-    renderActiveUsers() {
-        console.log(this.activeUsers)
+    setCurrentUser(user) {
+        this.current_user = user;
+    }
 
+    numberUsers() {
+        let num = 0;
+        for (let id in this.activeUsers) {
+            if (id !== this.current_user.id) {
+                num += 1;
+                this.activeUsers[id].num = num;
+            }
+        }
+    }
+
+    renderActiveUsers() {
         this.listTarget.innerHTML = Object.values(this.activeUsers).map(user =>
-            `<li>${user.id}</li>`
+            `<li class="user-${user.num}">${user.id}</li>`
         ).join("");
+    }
+
+    selectCells(r, c, r2, c2) {
+        this.subscription.perform('select_cells', { selected_cells: { r, c, r2, c2 } });
+    }
+
+    deselectCells() {
+        this.subscription.perform('select_cells', { selected_cells: null });
+    }
+
+    renderSelectedCells() {
+        this.selectedCells.forEach(({ r, c }) => {
+            const cell = this.hot.getCell(r, c);
+            if (cell && cell.classList.contains("current")) {
+                cell.className = "current";
+            } else {
+                cell.className = "";
+            }
+        });
+
+        this.selectedCells = [];
+        Object.entries(this.activeUsers).forEach(([id, user]) => {
+            if (user.selected_cells && id !== this.currentUserId) {
+                this.selectedCells.push(user.selected_cells);
+                const cell = this.hot.getCell(user.selected_cells.r, user.selected_cells.c);
+                cell.classList.add(`user-${user.num}`);
+            }
+        });
     }
 
     setupHandsontable() {
@@ -58,7 +118,9 @@ export default class extends Controller {
             rowHeaders: true,
             colHeaders: true,
             contextMenu: true,
-            licenseKey: 'non-commercial-and-evaluation'
+            licenseKey: 'non-commercial-and-evaluation',
+            afterSelection: (r, c, r2, c2) => this.selectCells(r, c, r2, c2),
+            afterDeselect: () => this.deselectCells()
         });
     }
 }
