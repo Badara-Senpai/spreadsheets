@@ -15,11 +15,17 @@ export default class extends Controller {
 
         this.selectedCells = [];
 
-        this.subscription = consumer.subscriptions.create("ActiveUsersChannel", {
-            received: (data) => {
+        this.usersSubscription = consumer.subscriptions.create("ActiveUsersChannel", {
+            received: data => {
                 if (data.selected_cells) {
                     this.renderSelectedCells(data);
                 }
+            }
+        });
+
+        this.cellsSubscription = consumer.subscriptions.create("SpreadSheetCellsChannel", {
+            received: data => {
+                this.updateCell(data.new_val);
             }
         });
 
@@ -80,12 +86,37 @@ export default class extends Controller {
         ).join("");
     }
 
+
+    setupHandsontable() {
+        const container = document.getElementById('spreadsheet');
+        this.hot = new Handsontable(container, {
+            minSpareCols: 1,
+            minSpareRows: 1,
+            startRows: 10,
+            startCols: 10,
+            rowHeaders: true,
+            colHeaders: true,
+            contextMenu: true,
+            afterSelection: (r, c, r2, c2) => this.selectCells(r, c, r2, c2),
+            afterDeselect: () => this.deselectCells(),
+            afterChange: (changes, source) => {
+                console.log('here')
+                if (source !== 'remote' && changes) {
+                    changes.forEach(change => {
+                        this.setCellValue({ r: change[0], c: change[1] }, change[3]);
+                    });
+                }
+            },
+            licenseKey: 'non-commercial-and-evaluation',
+        });
+    }
+
     selectCells(r, c, r2, c2) {
-        this.subscription.perform('select_cells', { selected_cells: { r, c, r2, c2 } });
+        this.usersSubscription.perform('select_cells', { selected_cells: { r, c, r2, c2 } });
     }
 
     deselectCells() {
-        this.subscription.perform('select_cells', { selected_cells: null });
+        this.usersSubscription.perform('select_cells', { selected_cells: null });
     }
 
     renderSelectedCells() {
@@ -108,19 +139,12 @@ export default class extends Controller {
         });
     }
 
-    setupHandsontable() {
-        const container = document.getElementById('spreadsheet');
-        this.hot = new Handsontable(container, {
-            minSpareCols: 1,
-            minSpareRows: 1,
-            startRows: 10,
-            startCols: 10,
-            rowHeaders: true,
-            colHeaders: true,
-            contextMenu: true,
-            licenseKey: 'non-commercial-and-evaluation',
-            afterSelection: (r, c, r2, c2) => this.selectCells(r, c, r2, c2),
-            afterDeselect: () => this.deselectCells()
-        });
+    updateCell(data) {
+        const { location, value } = data;
+        this.hot.setDataAtCell(location.r, location.c, value, 'remote');
+    }
+
+    setCellValue(location, value) {
+        this.cellsSubscription.perform('set_cell_value', { location: location, value: value });
     }
 }
