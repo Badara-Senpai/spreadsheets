@@ -1,11 +1,17 @@
-<h1>Spreadsheet#index</h1>
-<p>Find me in app/views/spreadsheet/index.html.erb</p>
+<section id="introduction">
+  <h1>Multi-User Spreadsheet 🤗</h1>
+  <p>
+    This web application combines Rails 7, ActionCable and Stimulus with RethinkDB and the NoBrainer
+    gem to power a multi-user WebSockets driven spreadsheet. 😮‍💨✌️
+  </p>
+</section>
 
-<section id="active_users" data-controller="spreadsheet">
-  <h2>Active users</h2>
+<div id="app" data-controller="spreadsheet">
+  <section id="active_users">
+    <h3>Active Users</h3>
 
-  <ul data-spreadsheet-target="list"></ul>
+    <ul data-spreadsheet-target="list"></ul>
+  </section>
 
   <section id="spreadsheet"></section>
-
-</section>
+</div>
